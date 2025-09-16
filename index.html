@@ -49,8 +49,8 @@
         max-width: 300px;
       }
       .upload-dropzone svg {
-        width: 60px;
-        height: 60px;
+        width: 30px;
+        height: 30px;
         margin-bottom: 10px;
         fill: #007bff;
       }
@@ -137,7 +137,7 @@
       td {
         border: 1px solid #ddd;
         text-align: center;
-        font-size: 14px;
+        font-size: 16px;
         height: 50px;
         padding: 8px;
         vertical-align: middle;
@@ -175,7 +175,7 @@
         }
 
         #banner {
-          max-height: 140px; /* smaller banner */
+          max-height: 120px; /* smaller banner */
         }
         .upload-dropzone {
           max-width: 150px;
@@ -187,8 +187,8 @@
           margin: 10px auto;
         }
         .upload-dropzone svg {
-          width: 40px;
-          height: 40px;
+          width: 20px;
+          height: 20px;
         }
         .upload-dropzone strong {
           font-size: 10px;
@@ -212,7 +212,7 @@
   <body>
     <div class="container">
       <!-- Banner -->
-      <!-- <img id="banner" src="poster.jpg" alt="Blood Donation Ride Banner" /> -->
+      <img id="banner" src="poster.jpg" alt="Blood Donation Ride Banner" />
 
       <h2>📒 Smart Contact Organizer</h2>
 
@@ -256,46 +256,59 @@
       let allContacts = {};
       let currentSheet = "All";
 
+      // ✅ Load initial file if present
+      async function loadInitialFile() {
+        try {
+          const response = await fetch("initial.xlsx");
+          const arrayBuffer = await response.arrayBuffer();
+          handleData(arrayBuffer);
+        } catch (err) {
+          console.warn("No initial sample.xlsx found:", err);
+        }
+      }
+
       function handleFile(file) {
         const reader = new FileReader();
         reader.onload = (event) => {
-          const data = new Uint8Array(event.target.result);
-          const workbook = XLSX.read(data, { type: "array" });
-
-          allContacts = {};
-          workbook.SheetNames.forEach((sheetName) => {
-            const sheet = workbook.Sheets[sheetName];
-            const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-
-            let contacts = [];
-            json.forEach((row, index) => {
-              if (index === 0) return; // skip header
-              let name = String(row[0] || "").trim();
-              let number = String(row[1] || "").trim();
-
-              if (name || number) {
-                contacts.push({
-                  name: name || "N/A",
-                  number: number || "N/A",
-                });
-              }
-            });
-
-            allContacts[sheetName] = contacts;
-          });
-
-          // ✅ Change dropzone style & text
-          dropzone.classList.add("uploaded");
-          document.getElementById("dropzoneText").innerText = "Replace File";
-          document.getElementById("dropzoneTooltip").innerText =
-            "(Click or drop another .xlsx / .xls file)";
-
-          buildUI(workbook.SheetNames);
+          handleData(event.target.result);
         };
         reader.readAsArrayBuffer(file);
       }
 
-      // Normal file upload
+      function handleData(data) {
+        const workbook = XLSX.read(new Uint8Array(data), { type: "array" });
+        allContacts = {};
+
+        workbook.SheetNames.forEach((sheetName) => {
+          const sheet = workbook.Sheets[sheetName];
+          const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+          let contacts = [];
+          json.forEach((row, index) => {
+            if (index === 0) return;
+            let name = String(row[0] || "").trim();
+            let number = String(row[1] || "").trim();
+
+            if (name || number) {
+              contacts.push({
+                name: name || "N/A",
+                number: number || "N/A",
+              });
+            }
+          });
+
+          allContacts[sheetName] = contacts;
+        });
+
+        dropzone.classList.add("uploaded");
+        document.getElementById("dropzoneText").innerText = "Replace File";
+        document.getElementById("dropzoneTooltip").innerText =
+          "(Click or drop another .xlsx / .xls file)";
+
+        buildUI(workbook.SheetNames);
+      }
+
+      // File upload
       upload.addEventListener("change", (e) => {
         if (e.target.files.length > 0) {
           handleFile(e.target.files[0]);
@@ -401,6 +414,9 @@
       searchBox.addEventListener("input", () => {
         displaySheet(currentSheet);
       });
+
+      // ✅ Auto load sample.xlsx on page load
+      window.addEventListener("DOMContentLoaded", loadInitialFile);
     </script>
   </body>
 </html>
