@@ -3,18 +3,36 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MBDD Contacts</title>
+  <title>Blood Donation Ride Contacts</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 15px;
       margin: 0;
       background: #f9f9f9;
     }
+
+    /* Main container */
+    .container {
+      max-width: 900px; /* Same width for banner + content */
+      margin: 0 auto;
+      padding: 15px;
+    }
+
     h2 {
       text-align: center;
-      margin-bottom: 15px;
+      margin: 15px 0;
+    }
+
+    /* Banner */
+    #banner {
+      width: 100%;
+      height: auto;
+      max-height: 250px;
+      display: block;
+      margin: 0 auto 15px;
+      border-radius: 8px;
+      object-fit: contain;
     }
 
     /* Upload */
@@ -24,14 +42,26 @@
       padding: 8px;
     }
 
-    /* Sheet Tabs */
+    /* Search (hidden by default) */
+    #searchBox {
+      display: none;
+      width: 100%;
+      padding: 10px;
+      margin: 0 auto 15px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    /* Tabs */
     #sheetTabs {
       display: flex;
       flex-wrap: nowrap;
-      overflow-x: auto;
+      overflow-x: auto; /* scrollable horizontally */
       gap: 8px;
       margin-bottom: 15px;
       padding-bottom: 5px;
+      -webkit-overflow-scrolling: touch;
     }
     #sheetTabs button {
       flex-shrink: 0;
@@ -49,7 +79,7 @@
       background: #0056b3;
     }
     #sheetTabs button.active {
-      background: #ff9800; /* Highlighted tab */
+      background: #ff9800;
       font-weight: bold;
     }
 
@@ -65,13 +95,13 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      table-layout: fixed; /* equal column width */
+      table-layout: fixed;
     }
     th, td {
       border: 1px solid #ddd;
       text-align: center;
       font-size: 14px;
-      height: 50px; /* fixed row height */
+      height: 50px;
       padding: 8px;
       vertical-align: middle;
       word-wrap: break-word;
@@ -95,7 +125,7 @@
       background: #218838;
     }
 
-    /* Mobile */
+    /* Mobile adjustments */
     @media (max-width: 600px) {
       th, td {
         font-size: 13px;
@@ -106,45 +136,102 @@
         padding: 10px;
         font-size: 16px;
       }
+      #banner {
+        max-height: 180px;
+      }
     }
   </style>
 </head>
 <body>
-  <h2>📒 MBDD Contacts</h2>
-  <input type="file" id="upload" accept=".xlsx,.xls" />
-  <div id="sheetTabs"></div>
-  <div class="table-container">
-    <table id="dataTable"></table>
+  <div class="container">
+    <!-- Banner -->
+    <img id="banner" src="poster.jpg" alt="Blood Donation Ride Banner">
+
+    <h2>📒 Blood Donation Ride Contacts</h2>
+
+    <!-- Upload -->
+    <input type="file" id="upload" accept=".xlsx,.xls" />
+
+    <!-- Search (hidden initially) -->
+    <input type="text" id="searchBox" placeholder="🔍 Search by name or number..." />
+
+    <!-- Tabs -->
+    <div id="sheetTabs"></div>
+
+    <!-- Table -->
+    <div class="table-container">
+      <table id="dataTable"></table>
+    </div>
   </div>
 
   <script>
     const upload = document.getElementById("upload");
     const sheetTabs = document.getElementById("sheetTabs");
     const dataTable = document.getElementById("dataTable");
+    const searchBox = document.getElementById("searchBox");
 
-    let workbook;
+    let allContacts = {};
+    let currentSheet = "All";
 
     upload.addEventListener("change", (e) => {
       const file = e.target.files[0];
       const reader = new FileReader();
       reader.onload = (event) => {
         const data = new Uint8Array(event.target.result);
-        workbook = XLSX.read(data, { type: "array" });
+        const workbook = XLSX.read(data, { type: "array" });
 
-        // Create buttons for each sheet
-        sheetTabs.innerHTML = "";
+        allContacts = {};
         workbook.SheetNames.forEach((sheetName) => {
-          const btn = document.createElement("button");
-          btn.innerText = sheetName;
-          btn.onclick = () => {
-            setActiveTab(btn);
-            displaySheet(sheetName);
-          };
-          sheetTabs.appendChild(btn);
+          const sheet = workbook.Sheets[sheetName];
+          const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+          let contacts = [];
+          json.forEach((row, index) => {
+            if (index === 0) return;
+            let name = row[0] || "";
+            let number = row.find((cell) => /^\d{7,}$/.test(cell)) || "";
+            if (name && number) {
+              contacts.push({ name, number });
+            }
+          });
+          allContacts[sheetName] = contacts;
         });
+
+        buildUI(workbook.SheetNames);
       };
       reader.readAsArrayBuffer(file);
     });
+
+    function buildUI(sheetNames) {
+      // Tabs
+      sheetTabs.innerHTML = "";
+      const allBtn = document.createElement("button");
+      allBtn.innerText = "All";
+      allBtn.classList.add("active");
+      allBtn.onclick = () => {
+        setActiveTab(allBtn);
+        currentSheet = "All";
+        displaySheet("All");
+      };
+      sheetTabs.appendChild(allBtn);
+
+      sheetNames.forEach((sheetName) => {
+        const btn = document.createElement("button");
+        btn.innerText = sheetName;
+        btn.onclick = () => {
+          setActiveTab(btn);
+          currentSheet = sheetName;
+          displaySheet(sheetName);
+        };
+        sheetTabs.appendChild(btn);
+      });
+
+      // Show search only after file uploaded
+      searchBox.style.display = "block";
+
+      // Default view
+      displaySheet("All");
+    }
 
     function setActiveTab(activeBtn) {
       const buttons = sheetTabs.querySelectorAll("button");
@@ -153,32 +240,39 @@
     }
 
     function displaySheet(sheetName) {
-      const sheet = workbook.Sheets[sheetName];
-      const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+      let contacts = [];
+      if (sheetName === "All") {
+        Object.values(allContacts).forEach((list) => contacts.push(...list));
+      } else {
+        contacts = allContacts[sheetName] || [];
+      }
+      renderTable(contacts);
+    }
 
-      // Clear table
-      dataTable.innerHTML = "";
+    function renderTable(contacts) {
+      const searchTerm = searchBox.value.trim().toLowerCase();
+      dataTable.innerHTML = "<tr><th>Name</th><th>Number</th><th>Call</th></tr>";
 
-      // Header row
-      let headerRow = "<tr><th>Name</th><th>Number</th><th>Call</th></tr>";
-      dataTable.innerHTML += headerRow;
-
-      // Parse rows
-      json.forEach((row, index) => {
-        if (index === 0) return; // skip header
-        let name = row[0] || "";  
-        let number = row.find((cell) => String(cell).match(/^\d{7,}$/)) || ""; 
-
-        if (name && number) {
+      contacts
+        .filter(
+          (c) =>
+            c.name.toLowerCase().trim().includes(searchTerm) ||
+            c.number.toLowerCase().trim().includes(searchTerm)
+        )
+        .forEach((c) => {
           dataTable.innerHTML += `
             <tr>
-              <td>${name}</td>
-              <td>${number}</td>
-              <td><a href="tel:${number}"><button class="call-btn">📞 Call</button></a></td>
+              <td>${c.name.trim()}</td>
+              <td>${c.number.trim()}</td>
+              <td><a href="tel:${c.number.trim()}"><button class="call-btn">📞 Call</button></a></td>
             </tr>`;
-        }
-      });
+        });
     }
+
+    // Search filter
+    searchBox.addEventListener("input", () => {
+      displaySheet(currentSheet);
+    });
   </script>
 </body>
 </html>
