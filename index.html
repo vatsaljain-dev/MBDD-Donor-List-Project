@@ -196,12 +196,12 @@
               if (index === 0) return; // skip header
               let name = row[0] || "";
               let number = row[1] || "";
-              // if (name && /^\d{7,}$/.test(number)) {
+              if (name && /^\d{7,}$/.test(number)) {
                 contacts.push({
                   name: String(name).trim(),
                   number: String(number).trim(),
                 });
-              // }
+              }
             });
 
             allContacts[sheetName] = contacts;
