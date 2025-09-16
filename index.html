@@ -1,278 +1,289 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Blood Donation Ride Contacts</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      background: #f9f9f9;
-    }
-
-    /* Main container */
-    .container {
-      max-width: 900px; /* Same width for banner + content */
-      margin: 0 auto;
-      padding: 15px;
-    }
-
-    h2 {
-      text-align: center;
-      margin: 15px 0;
-    }
-
-    /* Banner */
-    #banner {
-      width: 100%;
-      height: auto;
-      max-height: 250px;
-      display: block;
-      margin: 0 auto 15px;
-      border-radius: 8px;
-      object-fit: contain;
-    }
-
-    /* Upload */
-    #upload {
-      display: block;
-      margin: 0 auto 15px;
-      padding: 8px;
-    }
-
-    /* Search (hidden by default) */
-    #searchBox {
-      display: none;
-      width: 100%;
-      padding: 10px;
-      margin: 0 auto 15px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-
-    /* Tabs */
-    #sheetTabs {
-      display: flex;
-      flex-wrap: nowrap;
-      overflow-x: auto; /* scrollable horizontally */
-      gap: 8px;
-      margin-bottom: 15px;
-      padding-bottom: 5px;
-      -webkit-overflow-scrolling: touch;
-    }
-    #sheetTabs button {
-      flex-shrink: 0;
-      padding: 10px 15px;
-      border: none;
-      border-radius: 6px;
-      background: #007bff;
-      color: white;
-      font-size: 14px;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background 0.2s;
-    }
-    #sheetTabs button:hover {
-      background: #0056b3;
-    }
-    #sheetTabs button.active {
-      background: #ff9800;
-      font-weight: bold;
-    }
-
-    /* Table Container */
-    .table-container {
-      overflow-x: auto;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-
-    /* Table */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      table-layout: fixed;
-    }
-    th, td {
-      border: 1px solid #ddd;
-      text-align: center;
-      font-size: 14px;
-      height: 50px;
-      padding: 8px;
-      vertical-align: middle;
-      word-wrap: break-word;
-    }
-    th {
-      background: #f1f1f1;
-      font-weight: bold;
-    }
-
-    /* Call button */
-    .call-btn {
-      background: #28a745;
-      color: white;
-      border: none;
-      padding: 8px 12px;
-      border-radius: 5px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-    .call-btn:hover {
-      background: #218838;
-    }
-
-    /* Mobile adjustments */
-    @media (max-width: 600px) {
-      th, td {
-        font-size: 13px;
-        padding: 6px;
-        height: 45px;
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blood Donation Ride Contacts</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background: #f9f9f9;
       }
-      .call-btn {
-        padding: 10px;
-        font-size: 16px;
+
+      /* Main container */
+      .container {
+        max-width: 900px; /* Same width for banner + content */
+        margin: 0 auto;
+        padding: 15px;
       }
+
+      h2 {
+        text-align: center;
+        margin: 15px 0;
+      }
+
+      /* Banner */
       #banner {
-        max-height: 180px;
+        width: 100%;
+        height: auto;
+        max-height: 250px;
+        display: block;
+        margin: 0 auto 15px;
+        border-radius: 8px;
+        object-fit: contain;
       }
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <!-- Banner -->
-    <img id="banner" src="poster.jpg" alt="Blood Donation Ride Banner">
 
-    <h2>📒 Blood Donation Ride Contacts</h2>
+      /* Upload */
+      #upload {
+        display: block;
+        margin: 0 auto 15px;
+        padding: 8px;
+      }
 
-    <!-- Upload -->
-    <input type="file" id="upload" accept=".xlsx,.xls" />
+      /* Search (hidden by default) */
+      #searchBox {
+        display: none;
+        width: 100%;
+        padding: 10px;
+        margin: 0 auto 15px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 14px;
+      }
 
-    <!-- Search (hidden initially) -->
-    <input type="text" id="searchBox" placeholder="🔍 Search by name or number..." />
+      /* Tabs */
+      #sheetTabs {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto; /* scrollable horizontally */
+        gap: 8px;
+        margin-bottom: 15px;
+        padding-bottom: 5px;
+        -webkit-overflow-scrolling: touch;
+      }
+      #sheetTabs button {
+        flex-shrink: 0;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 6px;
+        background: #007bff;
+        color: white;
+        font-size: 14px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: background 0.2s;
+      }
+      #sheetTabs button:hover {
+        background: #0056b3;
+      }
+      #sheetTabs button.active {
+        background: #ff9800;
+        font-weight: bold;
+      }
 
-    <!-- Tabs -->
-    <div id="sheetTabs"></div>
+      /* Table Container */
+      .table-container {
+        overflow-x: auto;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      }
 
-    <!-- Table -->
-    <div class="table-container">
-      <table id="dataTable"></table>
+      /* Table */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+      }
+      th,
+      td {
+        border: 1px solid #ddd;
+        text-align: center;
+        font-size: 14px;
+        height: 50px;
+        padding: 8px;
+        vertical-align: middle;
+        word-wrap: break-word;
+      }
+      th {
+        background: #f1f1f1;
+        font-weight: bold;
+      }
+
+      /* Call button */
+      .call-btn {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 5px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      .call-btn:hover {
+        background: #218838;
+      }
+
+      /* Mobile adjustments */
+      @media (max-width: 600px) {
+        th,
+        td {
+          font-size: 13px;
+          padding: 6px;
+          height: 45px;
+        }
+        .call-btn {
+          padding: 10px;
+          font-size: 16px;
+        }
+        #banner {
+          max-height: 180px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Banner -->
+      <img id="banner" src="poster.jpg" alt="Blood Donation Ride Banner" />
+
+      <h2>📒 Blood Donation Ride Contacts</h2>
+
+      <!-- Upload -->
+      <input type="file" id="upload" accept=".xlsx,.xls" />
+
+      <!-- Search (hidden initially) -->
+      <input
+        type="text"
+        id="searchBox"
+        placeholder="🔍 Search by name or number..."
+      />
+
+      <!-- Tabs -->
+      <div id="sheetTabs"></div>
+
+      <!-- Table -->
+      <div class="table-container">
+        <table id="dataTable"></table>
+      </div>
     </div>
-  </div>
 
-  <script>
-    const upload = document.getElementById("upload");
-    const sheetTabs = document.getElementById("sheetTabs");
-    const dataTable = document.getElementById("dataTable");
-    const searchBox = document.getElementById("searchBox");
+    <script>
+      const upload = document.getElementById("upload");
+      const sheetTabs = document.getElementById("sheetTabs");
+      const dataTable = document.getElementById("dataTable");
+      const searchBox = document.getElementById("searchBox");
 
-    let allContacts = {};
-    let currentSheet = "All";
+      let allContacts = {};
+      let currentSheet = "All";
 
-    upload.addEventListener("change", (e) => {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const data = new Uint8Array(event.target.result);
-        const workbook = XLSX.read(data, { type: "array" });
+      upload.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const data = new Uint8Array(event.target.result);
+          const workbook = XLSX.read(data, { type: "array" });
 
-        allContacts = {};
-        workbook.SheetNames.forEach((sheetName) => {
-          const sheet = workbook.Sheets[sheetName];
-          const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+          allContacts = {};
+          workbook.SheetNames.forEach((sheetName) => {
+            const sheet = workbook.Sheets[sheetName];
+            const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-          let contacts = [];
-          json.forEach((row, index) => {
-            if (index === 0) return;
-            let name = row[0] || "";
-            let number = row.find((cell) => /^\d{7,}$/.test(cell)) || "";
-            if (name && number) {
-              contacts.push({ name, number });
-            }
+            let contacts = [];
+            json.forEach((row, index) => {
+              if (index === 0) return; // skip header
+              let name = row[0] || "";
+              let number = row[1] || "";
+              if (name && /^\d{7,}$/.test(number)) {
+                contacts.push({
+                  name: String(name).trim(),
+                  number: String(number).trim(),
+                });
+              }
+            });
+
+            allContacts[sheetName] = contacts;
           });
-          allContacts[sheetName] = contacts;
-        });
 
-        buildUI(workbook.SheetNames);
-      };
-      reader.readAsArrayBuffer(file);
-    });
-
-    function buildUI(sheetNames) {
-      // Tabs
-      sheetTabs.innerHTML = "";
-      const allBtn = document.createElement("button");
-      allBtn.innerText = "All";
-      allBtn.classList.add("active");
-      allBtn.onclick = () => {
-        setActiveTab(allBtn);
-        currentSheet = "All";
-        displaySheet("All");
-      };
-      sheetTabs.appendChild(allBtn);
-
-      sheetNames.forEach((sheetName) => {
-        const btn = document.createElement("button");
-        btn.innerText = sheetName;
-        btn.onclick = () => {
-          setActiveTab(btn);
-          currentSheet = sheetName;
-          displaySheet(sheetName);
+          buildUI(workbook.SheetNames);
         };
-        sheetTabs.appendChild(btn);
+        reader.readAsArrayBuffer(file);
       });
 
-      // Show search only after file uploaded
-      searchBox.style.display = "block";
+      function buildUI(sheetNames) {
+        // Tabs
+        sheetTabs.innerHTML = "";
+        const allBtn = document.createElement("button");
+        allBtn.innerText = "All";
+        allBtn.classList.add("active");
+        allBtn.onclick = () => {
+          setActiveTab(allBtn);
+          currentSheet = "All";
+          displaySheet("All");
+        };
+        sheetTabs.appendChild(allBtn);
 
-      // Default view
-      displaySheet("All");
-    }
+        sheetNames.forEach((sheetName) => {
+          const btn = document.createElement("button");
+          btn.innerText = sheetName;
+          btn.onclick = () => {
+            setActiveTab(btn);
+            currentSheet = sheetName;
+            displaySheet(sheetName);
+          };
+          sheetTabs.appendChild(btn);
+        });
 
-    function setActiveTab(activeBtn) {
-      const buttons = sheetTabs.querySelectorAll("button");
-      buttons.forEach((btn) => btn.classList.remove("active"));
-      activeBtn.classList.add("active");
-    }
+        // Show search only after file uploaded
+        searchBox.style.display = "block";
 
-    function displaySheet(sheetName) {
-      let contacts = [];
-      if (sheetName === "All") {
-        Object.values(allContacts).forEach((list) => contacts.push(...list));
-      } else {
-        contacts = allContacts[sheetName] || [];
+        // Default view
+        displaySheet("All");
       }
-      renderTable(contacts);
-    }
 
-    function renderTable(contacts) {
-      const searchTerm = searchBox.value.trim().toLowerCase();
-      dataTable.innerHTML = "<tr><th>Name</th><th>Number</th><th>Call</th></tr>";
+      function setActiveTab(activeBtn) {
+        const buttons = sheetTabs.querySelectorAll("button");
+        buttons.forEach((btn) => btn.classList.remove("active"));
+        activeBtn.classList.add("active");
+      }
 
-      contacts
-        .filter(
-          (c) =>
-            c.name.toLowerCase().trim().includes(searchTerm) ||
-            c.number.toLowerCase().trim().includes(searchTerm)
-        )
-        .forEach((c) => {
-          dataTable.innerHTML += `
+      function displaySheet(sheetName) {
+        let contacts = [];
+        if (sheetName === "All") {
+          Object.values(allContacts).forEach((list) => contacts.push(...list));
+        } else {
+          contacts = allContacts[sheetName] || [];
+        }
+        renderTable(contacts);
+      }
+
+      function renderTable(contacts) {
+        const searchTerm = searchBox.value.trim().toLowerCase();
+        dataTable.innerHTML =
+          "<tr><th>Name</th><th>Number</th><th>Call</th></tr>";
+
+        contacts
+          .filter(
+            (c) =>
+              c.name.toLowerCase().trim().includes(searchTerm) ||
+              c.number.toLowerCase().trim().includes(searchTerm)
+          )
+          .forEach((c) => {
+            dataTable.innerHTML += `
             <tr>
               <td>${c.name.trim()}</td>
               <td>${c.number.trim()}</td>
               <td><a href="tel:${c.number.trim()}"><button class="call-btn">📞 Call</button></a></td>
             </tr>`;
-        });
-    }
+          });
+      }
 
-    // Search filter
-    searchBox.addEventListener("input", () => {
-      displaySheet(currentSheet);
-    });
-  </script>
-</body>
+      // Search filter
+      searchBox.addEventListener("input", () => {
+        displaySheet(currentSheet);
+      });
+    </script>
+  </body>
 </html>
