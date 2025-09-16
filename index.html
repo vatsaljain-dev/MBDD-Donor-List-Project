@@ -14,32 +14,68 @@
 
       /* Main container */
       .container {
-        max-width: 900px; /* Same width for banner + content */
+        max-width: 900px;
         margin: 0 auto;
         padding: 15px;
       }
 
       h2 {
         text-align: center;
-        margin: 15px 0;
+        margin: 12px 0;
+        font-size: 22px; /* default for desktop */
       }
 
       /* Banner */
       #banner {
-        width: 100%;
+        max-width: 300px;
         height: auto;
-        max-height: 250px;
+        max-height: 300px;
         display: block;
         margin: 0 auto 15px;
         border-radius: 8px;
         object-fit: contain;
       }
 
-      /* Upload */
-      #upload {
+      /* Upload Dropzone */
+      .upload-dropzone {
+        border: 3px dashed #007bff;
+        background: #f0f8ff;
+        padding: 20px 20px;
+        text-align: center;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin: 20px auto;
+        max-width: 300px;
+      }
+      .upload-dropzone svg {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 10px;
+        fill: #007bff;
+      }
+      .upload-dropzone strong {
         display: block;
-        margin: 0 auto 15px;
-        padding: 8px;
+        font-size: 18px;
+        margin-bottom: 8px;
+      }
+      .upload-dropzone.dragover {
+        background: #d1e7ff;
+        border-color: #004494;
+      }
+
+      /* ✅ After upload (same size, just style changes) */
+      .upload-dropzone.uploaded {
+        background: #eef6ff;
+        border-color: #28a745;
+      }
+      .upload-dropzone.uploaded svg {
+        fill: #28a745;
+      }
+
+      .upload-tooltip {
+        font-size: 14px;
+        color: #666;
       }
 
       /* Search (hidden by default) */
@@ -57,7 +93,7 @@
       #sheetTabs {
         display: flex;
         flex-wrap: nowrap;
-        overflow-x: auto; /* scrollable horizontally */
+        overflow-x: auto;
         gap: 8px;
         margin-bottom: 15px;
         padding-bottom: 5px;
@@ -126,20 +162,49 @@
         background: #218838;
       }
 
+      @media (max-width: 900px) {
+        h2 {
+          font-size: 18px;
+        }
+      }
       /* Mobile adjustments */
       @media (max-width: 600px) {
+        h2 {
+          font-size: 14px;
+          margin: 10px 0;
+        }
+
+        #banner {
+          max-height: 140px; /* smaller banner */
+        }
+        .upload-dropzone {
+          max-width: 150px;
+          padding: 10px 10px;
+          text-align: center;
+          border-radius: 6px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          margin: 10px auto;
+        }
+        .upload-dropzone svg {
+          width: 40px;
+          height: 40px;
+        }
+        .upload-dropzone strong {
+          font-size: 10px;
+        }
+        .upload-tooltip {
+          font-size: 8px;
+        }
         th,
         td {
-          font-size: 13px;
-          padding: 6px;
-          height: 45px;
+          font-size: 12px;
+          padding: 5px;
+          height: 40px;
         }
         .call-btn {
-          padding: 10px;
-          font-size: 16px;
-        }
-        #banner {
-          max-height: 180px;
+          padding: 8px;
+          font-size: 13px;
         }
       }
     </style>
@@ -147,12 +212,23 @@
   <body>
     <div class="container">
       <!-- Banner -->
-      <img id="banner" src="poster.jpg" alt="Blood Donation Ride Banner" />
+      <!-- <img id="banner" src="poster.jpg" alt="Blood Donation Ride Banner" /> -->
 
-      <h2>📒 Blood Donation Ride Contacts</h2>
+      <h2>📒 Smart Contact Organizer</h2>
 
-      <!-- Upload -->
-      <input type="file" id="upload" accept=".xlsx,.xls" />
+      <!-- Upload Dropzone -->
+      <div class="upload-dropzone" id="dropzone">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+          <path
+            d="M19.35 10.04A7.49 7.49 0 0012 4a7.5 7.5 0 00-7.35 6.04A5.994 5.994 0 000 16c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5a5.996 5.996 0 00-4.65-5.96zM12 10v4h3l-4 4-4-4h3v-4h2z"
+          />
+        </svg>
+        <strong id="dropzoneText">Drag & Drop Excel File Here</strong>
+        <span class="upload-tooltip" id="dropzoneTooltip"
+          >(or click to browse .xlsx / .xls file)</span
+        >
+        <input type="file" id="upload" accept=".xlsx,.xls" hidden />
+      </div>
 
       <!-- Search (hidden initially) -->
       <input
@@ -172,6 +248,7 @@
 
     <script>
       const upload = document.getElementById("upload");
+      const dropzone = document.getElementById("dropzone");
       const sheetTabs = document.getElementById("sheetTabs");
       const dataTable = document.getElementById("dataTable");
       const searchBox = document.getElementById("searchBox");
@@ -179,8 +256,7 @@
       let allContacts = {};
       let currentSheet = "All";
 
-      upload.addEventListener("change", (e) => {
-        const file = e.target.files[0];
+      function handleFile(file) {
         const reader = new FileReader();
         reader.onload = (event) => {
           const data = new Uint8Array(event.target.result);
@@ -194,12 +270,13 @@
             let contacts = [];
             json.forEach((row, index) => {
               if (index === 0) return; // skip header
-              let name = row[0] || "";
-              let number = row[1] || "";
-              if (name && /^\d{7,}$/.test(number)) {
+              let name = String(row[0] || "").trim();
+              let number = String(row[1] || "").trim();
+
+              if (name || number) {
                 contacts.push({
-                  name: String(name).trim(),
-                  number: String(number).trim(),
+                  name: name || "N/A",
+                  number: number || "N/A",
                 });
               }
             });
@@ -207,13 +284,42 @@
             allContacts[sheetName] = contacts;
           });
 
+          // ✅ Change dropzone style & text
+          dropzone.classList.add("uploaded");
+          document.getElementById("dropzoneText").innerText = "Replace File";
+          document.getElementById("dropzoneTooltip").innerText =
+            "(Click or drop another .xlsx / .xls file)";
+
           buildUI(workbook.SheetNames);
         };
         reader.readAsArrayBuffer(file);
+      }
+
+      // Normal file upload
+      upload.addEventListener("change", (e) => {
+        if (e.target.files.length > 0) {
+          handleFile(e.target.files[0]);
+        }
+      });
+
+      // Drag & Drop
+      dropzone.addEventListener("click", () => upload.click());
+      dropzone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropzone.classList.add("dragover");
+      });
+      dropzone.addEventListener("dragleave", () => {
+        dropzone.classList.remove("dragover");
+      });
+      dropzone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropzone.classList.remove("dragover");
+        if (e.dataTransfer.files.length > 0) {
+          handleFile(e.dataTransfer.files[0]);
+        }
       });
 
       function buildUI(sheetNames) {
-        // Tabs
         sheetTabs.innerHTML = "";
         const allBtn = document.createElement("button");
         allBtn.innerText = "All";
@@ -236,10 +342,7 @@
           sheetTabs.appendChild(btn);
         });
 
-        // Show search only after file uploaded
         searchBox.style.display = "block";
-
-        // Default view
         displaySheet("All");
       }
 
@@ -259,6 +362,11 @@
         renderTable(contacts);
       }
 
+      function isValidNumber(num) {
+        const cleaned = num.replace(/[\s\-()]/g, "");
+        return /^(\+?\d{1,4})?\d{7,15}$/.test(cleaned);
+      }
+
       function renderTable(contacts) {
         const searchTerm = searchBox.value.trim().toLowerCase();
         dataTable.innerHTML =
@@ -267,20 +375,29 @@
         contacts
           .filter(
             (c) =>
-              c.name.toLowerCase().trim().includes(searchTerm) ||
-              c.number.toLowerCase().trim().includes(searchTerm)
+              c.name.toLowerCase().includes(searchTerm) ||
+              c.number.toLowerCase().includes(searchTerm)
           )
           .forEach((c) => {
+            let numberDisplay =
+              c.number && c.number !== "N/A" ? c.number.trim() : "--";
+            let callCell = "";
+
+            if (c.number && c.number !== "N/A" && isValidNumber(c.number)) {
+              callCell = `<a href="tel:${c.number.trim()}"><button class="call-btn">📞 Call</button></a>`;
+            } else {
+              callCell = `<span style="color:#999;">Not available</span>`;
+            }
+
             dataTable.innerHTML += `
-            <tr>
-              <td>${c.name.trim()}</td>
-              <td>${c.number.trim()}</td>
-              <td><a href="tel:${c.number.trim()}"><button class="call-btn">📞 Call</button></a></td>
-            </tr>`;
+              <tr>
+                <td>${c.name !== "N/A" ? c.name.trim() : "--"}</td>
+                <td>${numberDisplay}</td>
+                <td>${callCell}</td>
+              </tr>`;
           });
       }
 
-      // Search filter
       searchBox.addEventListener("input", () => {
         displaySheet(currentSheet);
       });
