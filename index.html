@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MBDD Contacts</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 15px;
+      margin: 0;
+      background: #f9f9f9;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    /* Upload */
+    #upload {
+      display: block;
+      margin: 0 auto 15px;
+      padding: 8px;
+    }
+
+    /* Sheet Tabs */
+    #sheetTabs {
+      display: flex;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      gap: 8px;
+      margin-bottom: 15px;
+      padding-bottom: 5px;
+    }
+    #sheetTabs button {
+      flex-shrink: 0;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 6px;
+      background: #007bff;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+    #sheetTabs button:hover {
+      background: #0056b3;
+    }
+    #sheetTabs button.active {
+      background: #ff9800; /* Highlighted tab */
+      font-weight: bold;
+    }
+
+    /* Table Container */
+    .table-container {
+      overflow-x: auto;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    /* Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed; /* equal column width */
+    }
+    th, td {
+      border: 1px solid #ddd;
+      text-align: center;
+      font-size: 14px;
+      height: 50px; /* fixed row height */
+      padding: 8px;
+      vertical-align: middle;
+      word-wrap: break-word;
+    }
+    th {
+      background: #f1f1f1;
+      font-weight: bold;
+    }
+
+    /* Call button */
+    .call-btn {
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .call-btn:hover {
+      background: #218838;
+    }
+
+    /* Mobile */
+    @media (max-width: 600px) {
+      th, td {
+        font-size: 13px;
+        padding: 6px;
+        height: 45px;
+      }
+      .call-btn {
+        padding: 10px;
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h2>📒 MBDD Contacts</h2>
+  <input type="file" id="upload" accept=".xlsx,.xls" />
+  <div id="sheetTabs"></div>
+  <div class="table-container">
+    <table id="dataTable"></table>
+  </div>
+
+  <script>
+    const upload = document.getElementById("upload");
+    const sheetTabs = document.getElementById("sheetTabs");
+    const dataTable = document.getElementById("dataTable");
+
+    let workbook;
+
+    upload.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const data = new Uint8Array(event.target.result);
+        workbook = XLSX.read(data, { type: "array" });
+
+        // Create buttons for each sheet
+        sheetTabs.innerHTML = "";
+        workbook.SheetNames.forEach((sheetName) => {
+          const btn = document.createElement("button");
+          btn.innerText = sheetName;
+          btn.onclick = () => {
+            setActiveTab(btn);
+            displaySheet(sheetName);
+          };
+          sheetTabs.appendChild(btn);
+        });
+      };
+      reader.readAsArrayBuffer(file);
+    });
+
+    function setActiveTab(activeBtn) {
+      const buttons = sheetTabs.querySelectorAll("button");
+      buttons.forEach((btn) => btn.classList.remove("active"));
+      activeBtn.classList.add("active");
+    }
+
+    function displaySheet(sheetName) {
+      const sheet = workbook.Sheets[sheetName];
+      const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+      // Clear table
+      dataTable.innerHTML = "";
+
+      // Header row
+      let headerRow = "<tr><th>Name</th><th>Number</th><th>Call</th></tr>";
+      dataTable.innerHTML += headerRow;
+
+      // Parse rows
+      json.forEach((row, index) => {
+        if (index === 0) return; // skip header
+        let name = row[0] || "";  
+        let number = row.find((cell) => String(cell).match(/^\d{7,}$/)) || ""; 
+
+        if (name && number) {
+          dataTable.innerHTML += `
+            <tr>
+              <td>${name}</td>
+              <td>${number}</td>
+              <td><a href="tel:${number}"><button class="call-btn">📞 Call</button></a></td>
+            </tr>`;
+        }
+      });
+    }
+  </script>
+</body>
+</html>
